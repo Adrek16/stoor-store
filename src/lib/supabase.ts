@@ -45,6 +45,10 @@ type RequestOptions = {
   body?: unknown;
   /** قيمة ترويسة Prefer، مثل return=representation أو resolution=merge-duplicates */
   prefer?: string;
+  /** مهلة الطلب الواحد — Proxy يستخدم مهلة قصيرة حتى لا يتعلّق التنقّل. */
+  timeoutMs?: number;
+  /** عدد محاولات GET — الافتراضي 3، وProxy يستخدم محاولة واحدة. */
+  attempts?: number;
 };
 
 /**
@@ -53,27 +57,16 @@ type RequestOptions = {
  * خصوصاً أثناء البناء حين تعمل عدة عمليات في الوقت نفسه.
  */
 const MAX_CONCURRENT = 4;
-const REQUEST_TIMEOUT_MS = 20_000;
-const GET_ATTEMPTS = 3;
+// مهل قصيرة: عند تعطّل DNS لا نريد تعليق `"use cache"` حتى مهلة Next.
+const REQUEST_TIMEOUT_MS = 6_000;
+const GET_ATTEMPTS = 2;
 
-let activeRequests = 0;
-const pendingRequests: Array<() => void> = [];
-
-async function acquireSlot(): Promise<void> {
-  if (activeRequests < MAX_CONCURRENT) {
-    activeRequests += 1;
-    return;
-  }
-  await new Promise<void>((resolve) => pendingRequests.push(resolve));
-  activeRequests += 1;
-}
-
-function releaseSlot(): void {
-  activeRequests -= 1;
-  const next = pendingRequests.shift();
-  if (next) next();
-}
-
+/*
+ * لا نستخدم طابور Promise على مستوى الوحدة للحد من التزامن:
+ * دوال `"use cache"` في Next 16 ترفض انتظار Promise أُنشئ خارج نطاقها
+ * (الطابور كان يعلّق الطلب حتى يحرّر طلب آخر مكانه).
+ * `https.Agent` نفسه يحدّ الاتصالات إلى MAX_CONCURRENT ويتكفّل بالانتظار.
+ */
 const httpsAgent = new https.Agent({
   keepAlive: true,
   maxSockets: MAX_CONCURRENT,
@@ -100,7 +93,8 @@ function requestOnce(
   url: URL,
   method: string,
   headers: Record<string, string>,
-  payload?: string
+  payload?: string,
+  timeoutMs = REQUEST_TIMEOUT_MS
 ): Promise<RawResponse> {
   const isHttps = url.protocol !== "http:";
   const lib = isHttps ? https : http;
@@ -129,7 +123,7 @@ function requestOnce(
       }
     );
 
-    req.setTimeout(REQUEST_TIMEOUT_MS, () => {
+    req.setTimeout(timeoutMs, () => {
       const timeout = new Error("ETIMEDOUT") as Error & { code?: string };
       timeout.code = "ETIMEDOUT";
       req.destroy(timeout);
@@ -146,7 +140,13 @@ function requestOnce(
  */
 export async function sb<T = Record<string, unknown>>(
   pathname: string,
-  { method = "GET", body, prefer }: RequestOptions = {}
+  {
+    method = "GET",
+    body,
+    prefer,
+    timeoutMs = REQUEST_TIMEOUT_MS,
+    attempts: maxAttempts = GET_ATTEMPTS,
+  }: RequestOptions = {}
 ): Promise<T> {
   if (!BASE_URL || !KEY) {
     throw new SupabaseError("Supabase غير مُهيّأ — اضبط SUPABASE_URL و SUPABASE_SERVICE_ROLE_KEY", 503);
@@ -164,13 +164,12 @@ export async function sb<T = Record<string, unknown>>(
   const target = new URL(`${BASE_URL}/rest/v1/${pathname}`);
 
   // إعادة المحاولة للقراءات فقط — إعادة POST/PATCH/DELETE قد تكرر الكتابة.
-  const attempts = method === "GET" ? GET_ATTEMPTS : 1;
+  const attempts = method === "GET" ? maxAttempts : 1;
   let lastError: unknown;
 
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
-    await acquireSlot();
     try {
-      const res = await requestOnce(target, method, headers, payload);
+      const res = await requestOnce(target, method, headers, payload, timeoutMs);
 
       if (res.status < 200 || res.status >= 300) {
         let message = res.text.slice(0, 300);
@@ -194,8 +193,6 @@ export async function sb<T = Record<string, unknown>>(
       lastError = err;
       // أخطاء PostgREST (4xx/5xx) ليست عابرة — لا فائدة من تكرارها.
       if (err instanceof SupabaseError) throw err;
-    } finally {
-      releaseSlot();
     }
 
     if (attempt < attempts && isTransientNetworkError(lastError)) {

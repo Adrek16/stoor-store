@@ -1,4 +1,4 @@
-import { hasSupabase, isMissingTable, sbSelect } from "./supabase";
+import { hasSupabase, isMissingTable, sb } from "./supabase";
 
 type SlugHistoryRow = { new_slug: string };
 
@@ -15,9 +15,10 @@ export async function renamedProductSlug(slug: string): Promise<string | null> {
   if (!hasSupabase || !slug) return null;
 
   try {
-    const rows = await sbSelect<SlugHistoryRow>(
-      "product_slug_history",
-      `select=new_slug&old_slug=eq.${encodeURIComponent(slug)}&limit=1`
+    const rows = await sb<SlugHistoryRow[]>(
+      `product_slug_history?select=new_slug&old_slug=eq.${encodeURIComponent(slug)}&limit=1`,
+      // Proxy يقع على مسار كل صفحة منتج: مهلة قصيرة وفشل آمن خير من تعليق التنقّل.
+      { timeoutMs: 2500, attempts: 1 }
     );
 
     const next = rows[0]?.new_slug;
