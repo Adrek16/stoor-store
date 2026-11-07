@@ -30,7 +30,42 @@
 
 ---
 
-## 2. الخيار أ — Vercel (الأسهل والموصى به)
+## 2. الخيار الموصى به — Netlify (مجاني)
+
+الخطة المجانية تعطي 100 GB نقل شهرياً، SSL، ونطاق `*.netlify.app`.
+
+### أ) من مستودع GitHub (النشر التلقائي)
+
+1. افتح [app.netlify.com/start](https://app.netlify.com/start) وسجّل الدخول بـ GitHub.
+2. اختر المستودع `Adrek16/stoor-store`.
+3. Netlify يقرأ `netlify.toml` تلقائياً: أمر البناء `npm run build`، Node 22.
+4. أضف المتغيرات الستة من **Site configuration → Environment variables**.
+5. اضغط **Deploy**.
+
+كل `git push` على `main` يعيد النشر تلقائياً.
+
+### ب) من الجهاز (Netlify CLI)
+
+```bash
+npm install -g netlify-cli
+netlify login
+netlify link --id <project-id>
+netlify env:set SESSION_SECRET "..." --context production
+netlify deploy --build --prod
+```
+
+> `netlify deploy --build` يشغّل البناء محلياً ويرفع الناتج — لا يحتاج وصول Netlify إلى GitHub.
+
+### ملاحظات خاصة بـ Netlify
+
+- ملف `netlify.toml` يضبط `NODE_VERSION=22`.
+- `next.config.ts` يتجاهل `output: "standalone"` عندما يضبط Netlify المتغير `NETLIFY=true`،
+  لأن Netlify يستخدم محوّل OpenNext الخاص به.
+- بعد أول نشر: انسخ رابط الموقع إلى `STORE_URL` و`STORE_REVALIDATE_URL` في لوحة المدير.
+
+---
+
+## 3. الخيار ب — Vercel
 
 1. ارفع المشروع إلى مستودع GitHub خاص.
 2. افتح [vercel.com](https://vercel.com) → **Add New Project** → اختر المستودع.
@@ -51,7 +86,7 @@
 
 ---
 
-## 3. الخيار ب — استضافة Node عادية (VPS / خادم)
+## 4. الخيار ج — استضافة Node عادية (VPS / خادم)
 
 ### أ) من حزمة standalone الجاهزة
 
@@ -110,7 +145,7 @@ sudo certbot --nginx -d shop.example.com
 
 ---
 
-## 4. الخيار ج — cPanel / لوحة استضافة
+## 5. الخيار د — cPanel / لوحة استضافة
 
 1. ابحث عن **Setup Node.js App**.
 2. Application root: مجلد المشروع.
@@ -123,7 +158,7 @@ sudo certbot --nginx -d shop.example.com
 
 ---
 
-## 5. ربط لوحة المدير بالموقع المنشور
+## 6. ربط لوحة المدير بالموقع المنشور
 
 لوحة المدير تعمل محلياً، لكنها تحتاج معرفة رابط المتجر العام لإرسال إشعار التحديث:
 
@@ -137,7 +172,7 @@ sudo certbot --nginx -d shop.example.com
 
 ---
 
-## 6. قائمة فحص بعد النشر
+## 7. قائمة فحص بعد النشر
 
 - [ ] الصفحة الرئيسية تفتح وتعرض المنتجات الحقيقية.
 - [ ] صور المنتجات تظهر (وليست الرسوم البديلة).
@@ -152,7 +187,7 @@ sudo certbot --nginx -d shop.example.com
 
 ---
 
-## 7. أمان
+## 8. أمان
 
 - لا ترفع `.env.local` أو `.env` إلى Git أو داخل حزمة المصدر.
 - حزمة المصدر لا تحتوي أي ملف بيئة.
@@ -161,7 +196,7 @@ sudo certbot --nginx -d shop.example.com
 
 ---
 
-## 8. ملاحظات فنية
+## 9. ملاحظات فنية
 
 - `experimental.cpus: 1` ضروري أثناء البناء لأن Supabase يحدّ الاتصالات المتزامنة.
 - العميل يستخدم `node:https` مع طابور 4 طلبات وإعادة محاولة، ويعمل على أي استضافة Node.

@@ -57,3 +57,6 @@ supabase/.temp/
 bluetooth_content_share.html
 opencode.json
 deploy/*.zip
+
+# Local Netlify folder
+.netlify
