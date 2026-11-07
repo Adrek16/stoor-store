@@ -1,0 +1,9 @@
+# ملفات لا يحتاجها نشر Vercel
+deploy/
+.tmp-joj-images/
+.workbuddy-ai/
+.data/
+docs/
+.env
+.env.local
+*.zip
