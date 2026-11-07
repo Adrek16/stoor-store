@@ -1,0 +1,245 @@
+@import "tailwindcss";
+
+/* ── Cairo (variable, self-hosted) ────────────────────────
+   مستضاف محلياً بدل next/font/google: لا اعتماد على شبكة
+   وقت البناء، ولا طلبات خارجية وقت التشغيل. */
+@font-face {
+  font-family: "Cairo";
+  font-style: normal;
+  font-weight: 200 1000;
+  font-display: swap;
+  src: url("/fonts/cairo-arabic.woff2") format("woff2");
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891,
+    U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41,
+    U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC;
+}
+@font-face {
+  font-family: "Cairo";
+  font-style: normal;
+  font-weight: 200 1000;
+  font-display: swap;
+  src: url("/fonts/cairo-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6,
+    U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122,
+    U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@theme {
+  /* ── Typography ─────────────────────────────── */
+  --font-sans: "Cairo", ui-sans-serif, system-ui, "Segoe UI", Tahoma, sans-serif;
+  --font-display: "Cairo", Georgia, serif;
+
+  /* ── Brand palette (extracted from joj-accessories.com) ── */
+  --color-ink: #231d1b;
+  --color-ink-soft: #6f625b;
+  --color-ink-mute: #9a8d85;
+  --color-copper: #c87f62;
+  --color-copper-dark: #a2593c;
+  --color-copper-light: #eea588;
+  --color-copper-wash: #f6e6dd;
+  --color-maroon: #490000;
+  --color-cream: #fbf8f5;
+  --color-sand: #f3ece5;
+  --color-line: #eadfd5;
+  --color-line-soft: #f2ebe4;
+  --color-success: #2f7d5b;
+
+  /* ── Radius & shadow ────────────────────────── */
+  --radius-card: 1.25rem;
+  --shadow-soft: 0 1px 2px rgb(35 29 27 / 0.04), 0 12px 32px -12px rgb(35 29 27 / 0.12);
+  --shadow-lift: 0 2px 4px rgb(35 29 27 / 0.05), 0 24px 48px -20px rgb(35 29 27 / 0.22);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background: var(--color-cream);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01";
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: var(--color-copper-wash);
+    color: var(--color-maroon);
+  }
+
+  h1, h2, h3, h4 {
+    text-wrap: balance;
+    letter-spacing: -0.01em;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-copper);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  /* Slim, brand-tinted scrollbar */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--color-sand); }
+  ::-webkit-scrollbar-thumb {
+    background: #d9c4b6;
+    border-radius: 99px;
+    border: 3px solid var(--color-sand);
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--color-copper); }
+}
+
+@layer components {
+  .container-x {
+    width: 100%;
+    margin-inline: auto;
+    max-width: 1280px;
+    padding-inline: 1rem;
+  }
+  @media (min-width: 768px) {
+    .container-x { padding-inline: 1.75rem; }
+  }
+
+  /* Section eyebrow label */
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-copper-dark);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    padding: 0.8rem 1.6rem;
+    transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn:active { transform: translateY(1px) scale(0.995); }
+
+  .btn-primary {
+    background: var(--color-ink);
+    color: #fff;
+    box-shadow: 0 10px 24px -12px rgb(35 29 27 / 0.7);
+  }
+  .btn-primary:hover { background: var(--color-maroon); }
+
+  .btn-copper {
+    background: var(--color-copper);
+    color: #fff;
+    box-shadow: 0 10px 24px -12px rgb(200 127 98 / 0.9);
+  }
+  .btn-copper:hover { background: var(--color-copper-dark); }
+
+  .btn-outline {
+    border: 1px solid var(--color-line);
+    color: var(--color-ink);
+    background: #fff;
+  }
+  .btn-outline:hover {
+    border-color: var(--color-copper);
+    color: var(--color-copper-dark);
+  }
+
+  .btn-ghost {
+    color: var(--color-ink);
+    padding-inline: 0.9rem;
+  }
+  .btn-ghost:hover { color: var(--color-copper-dark); }
+
+  .card {
+    background: #fff;
+    border: 1px solid var(--color-line-soft);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .hairline {
+    height: 1px;
+    background: linear-gradient(
+      to left,
+      transparent,
+      var(--color-line) 20%,
+      var(--color-line) 80%,
+      transparent
+    );
+  }
+
+  .num {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+}
+
+@layer utilities {
+  /* ── Marquee ────────────────────────────────── */
+  @keyframes marquee-rtl {
+    from { transform: translateX(0); }
+    to   { transform: translateX(50%); }
+  }
+  .animate-marquee {
+    animation: marquee-rtl 38s linear infinite;
+  }
+  .animate-marquee:hover { animation-play-state: paused; }
+
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .animate-fade-up {
+    animation: fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  @keyframes soft-float {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-10px); }
+  }
+  .animate-float { animation: soft-float 7s ease-in-out infinite; }
+
+  .grain {
+    position: relative;
+  }
+  .grain::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  .text-balance { text-wrap: balance; }
+
+  /* Fade the edges of a horizontally scrolling rail */
+  .mask-fade-x {
+    mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
