@@ -1,8 +1,12 @@
 import type { NextConfig } from "next";
 
+// Netlify وVercel يستخدمان مخرجات البناء الخاصة بهما، و`standalone`
+// مخصّص لحزمة التشغيل الذاتي على خادم Node. Netlify يضبط NETLIFY=true.
+const isPlatformBuild = Boolean(process.env.NETLIFY) || Boolean(process.env.VERCEL);
+
 const nextConfig: NextConfig = {
   /* config options here */
-  output: "standalone",
+  output: isPlatformBuild ? undefined : "standalone",
   cacheComponents: true,
   partialPrefetching: true,
   // بناءٌ أحادي العامل: Supabase هنا يرفض الاتصالات المتزامنة الكثيرة،

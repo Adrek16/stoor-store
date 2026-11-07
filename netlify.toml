@@ -1,0 +1,20 @@
+# إعداد نشر متجر «الشجاع» على Netlify
+# Netlify يكتشف Next.js تلقائياً ويستخدم محوّل OpenNext الرسمي.
+
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "22"
+  NPM_FLAGS = "--no-audit --no-fund"
+
+# لا تُنشر ملفات التطوير والحزم المحلية
+[functions]
+  node_bundler = "esbuild"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
